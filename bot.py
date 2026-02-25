@@ -10,12 +10,12 @@ from pyrogram import Client, filters
 # ==============================
 # CONFIG
 # ==============================
-API_ID = 22657083  # Your API_ID
-API_HASH = "d6186691704bd901bdab275ceaab88f3"  # Your API_HASH
-BOT_TOKEN = "8757979136:AAGJ7vwPPwf_BypyYk1i9LMNPfOJ2nMP5Ac"  # Your Bot Token
+API_ID = 12345  # Your API_ID
+API_HASH = "YOUR_API_HASH"  # Your API_HASH
+BOT_TOKEN = "YOUR_BOT_TOKEN"  # Your Bot Token
 
-# 👑 ADMIN IDS (Add your Telegram ID here)
-ADMIN_IDS = [2083251445]  # Replace with your Telegram user ID
+# 👑 ADMIN IDS - ADD YOUR TELEGRAM ID HERE
+ADMIN_IDS = [123456789]  # Replace with your user ID (@userinfobot)
 
 DB = "users.json"
 DL = "downloads"
@@ -105,19 +105,19 @@ def progress_bar(percent):
 @app.on_message(filters.command("start"))
 async def start(_, message):
     welcome = """
-🤖 **GitHub Push Bot**
+🤖 <b>Github Push Bot</b>
 
-**Commands:**
-`/makeconfig` - Setup repo config
-`/config` - View your config  
-`/push` - Upload ZIP (reply to ZIP)
+<b>Commands:</b>
+• /makeconfig - Setup repo
+• /config - View config  
+• /push - Upload ZIP (reply)
 
-**Usage:**
-1. `/makeconfig TOKEN|BRANCH|REPO|private`
+<b>Usage:</b>
+1. /makeconfig TOKEN|BRANCH|REPO|private
 2. Send ZIP file
-3. Reply `/push`
+3. Reply /push
 """
-    await message.reply(welcome, parse_mode="markdown")
+    await message.reply(welcome, parse_mode="md")
 
 @app.on_message(filters.command("makeconfig"))
 async def makeconfig(_, message):
@@ -127,7 +127,7 @@ async def makeconfig(_, message):
         
         vis = vis.lower()
         if vis not in ["private", "public"]:
-            return await message.reply("❌ Use `private` or `public`")
+            return await message.reply("❌ Use <code>private</code> or <code>public</code>")
         
         repo_name = repo.split("/")[-1]
         if create_repo(token, repo_name, vis):
@@ -141,9 +141,11 @@ async def makeconfig(_, message):
             
     except:
         await message.reply(
-            "```Usage:\n/makeconfig TOKEN|BRANCH|USER/REPO|private/public```\n\n"
-            "Example: `/makeconfig ghp_xxx|main|user/repo|private`",
-            parse_mode="markdown"
+            "<b>Usage:</b>\n"
+            "<code>/makeconfig TOKEN|BRANCH|USER/REPO|private/public</code>\n\n"
+            "<b>Example:</b>\n"
+            "<code>/makeconfig ghp_xxx|main|user/repo|private</code>",
+            parse_mode="md"
         )
 
 @app.on_message(filters.command("config"))
@@ -153,11 +155,11 @@ async def show_config(_, message):
         return await message.reply("❌ No config. Use /makeconfig")
     
     await message.reply(
-        f"⚙️ **Config**\n\n"
-        f"📂 Repo: `{cfg['repo']}`\n"
-        f"🌿 Branch: `{cfg['branch']}`\n"
-        f"🔒 Visibility: `{cfg['visibility'].title()}`",
-        parse_mode="markdown"
+        f"⚙️ <b>Config</b>\n\n"
+        f"📂 <b>Repo</b>: <code>{cfg['repo']}</code>\n"
+        f"🌿 <b>Branch</b>: <code>{cfg['branch']}</code>\n"
+        f"🔒 <b>Visibility</b>: <code>{cfg['visibility'].title()}</code>",
+        parse_mode="md"
     )
 
 @app.on_message(filters.command("push"))
@@ -167,17 +169,17 @@ async def push_zip(client, message):
     
     doc = message.reply_to_message.document
     if not doc or not doc.file_name.lower().endswith(".zip"):
-        return await message.reply("❌ Reply to **ZIP file** only!")
+        return await message.reply("❌ Reply to <b>ZIP file</b> only!")
     
     cfg = get_user(message.from_user.id)
     if not cfg:
-        return await message.reply("❌ Setup: `/makeconfig`")
+        return await message.reply("❌ Setup: <code>/makeconfig</code>")
     
-    status_msg = await message.reply("📥 Downloading...")
+    status_msg = await message.reply("📥 <b>Downloading...</b>")
     
     try:
         zip_path = await message.reply_to_message.download(file_name=f"{DL}/{doc.file_name}")
-        await status_msg.edit("📦 Extracting...")
+        await status_msg.edit("📦 <b>Extracting...</b>")
         
         extract_dir = f"{EXT}/{doc.file_name[:-4]}"
         os.makedirs(extract_dir, exist_ok=True)
@@ -200,7 +202,7 @@ async def push_zip(client, message):
         start = time.time()
         success = 0
         
-        await status_msg.edit(f"🚀 Upload started... {len(files)} files")
+        await status_msg.edit(f"🚀 <b>Upload started...</b> <i>{len(files)} files</i>")
         
         for i, file_path in enumerate(files, 1):
             repo_path = os.path.relpath(file_path, extract_dir)
@@ -213,20 +215,20 @@ async def push_zip(client, message):
             percent = min(100, int(uploaded / total_size * 100))
             
             await status_msg.edit(
-                f"[{progress_bar(percent)}] {percent}%\n"
-                f"⚡ {speed:.1f}MB/s | {i}/{len(files)} ✅{success}"
+                f"<code>[{progress_bar(percent)}] {percent}%</code>\n"
+                f"⚡ <b>{speed:.1f}MB/s</b> | {i}/{len(files)} ✅{success}"
             )
         
         repo_url = f"https://github.com/{cfg['repo']}"
         os.system(f"rm -rf '{zip_path}' '{extract_dir}'")
-        await status_msg.edit(f"✅ **Done!** [{success}/{len(files)}]\n🔗 {repo_url}")
+        await status_msg.edit(f"✅ <b>Done!</b> [{success}/{len(files)}]\n🔗 <a href='{repo_url}'>View Repo</a>")
         
     except Exception as e:
-        await status_msg.edit("❌ Upload failed!")
+        await status_msg.edit("❌ <b>Upload failed!</b>")
         print(f"Error: {e}")
 
 # ==============================
-# 👑 ADMIN PANEL COMMANDS
+# 👑 ADMIN PANEL
 # ==============================
 @app.on_message(filters.command("stats") & filters.private)
 async def admin_stats(_, message):
@@ -236,21 +238,21 @@ async def admin_stats(_, message):
     users = get_all_users()
     active = sum(1 for uid in users if get_user(uid).get('token'))
     
-    stats = f"""👑 **ADMIN PANEL - STATS**
+    stats = f"""👑 <b>ADMIN PANEL - STATS</b>
 
-👥 **Total Users**: `{len(users)}`
-✅ **Active Users**: `{active}`
-📊 **Active %**: `{active/len(users)*100:.1f}%`
-💾 **DB Size**: `{os.path.getsize(DB)/1024:.1f} KB`
+👥 <b>Total Users</b>: <code>{len(users)}</code>
+✅ <b>Active Users</b>: <code>{active}</code>
+📊 <b>Active %</b>: <code>{active/len(users)*100:.1f}%</code>
+💾 <b>DB Size</b>: <code>{os.path.getsize(DB)/1024:.1f} KB</code>
 
-**ADMIN COMMANDS:**
-`/users` - List all users
-`/broadcast` - Send message to all
-`/clean` - Delete old temp files
-`/addadmin ID` - Add new admin
-`/admins` - List admins
+<b>👑 ADMIN COMMANDS:</b>
+<code>/users</code> - List users
+<code>/broadcast</code> - Mass message
+<code>/clean</code> - Clean temp files
+<code>/addadmin ID</code> - Add admin
+<code>/admins</code> - List admins
 """
-    await message.reply(stats, parse_mode="markdown")
+    await message.reply(stats, parse_mode="md")
 
 @app.on_message(filters.command("users") & filters.private)
 async def admin_users(_, message):
@@ -267,10 +269,10 @@ async def admin_users(_, message):
         username = data.get('username', 'N/A')
         has_config = "✅" if data.get('token') else "❌"
         last_seen = data.get('last_seen', 'Never')[:10]
-        user_list.append(f"{has_config} `{uid}` `{username}` `{last_seen}`")
+        user_list.append(f"{has_config} <code>{uid}</code> <code>{username}</code> <code>{last_seen}</code>")
     
-    text = f"👥 **USERS** ({len(users)} total)\n\n" + "\n".join(user_list[:20])
-    await message.reply(text, parse_mode="markdown")
+    text = f"👥 <b>USERS</b> (<i>{len(users)} total</i>)\n\n" + "\n".join(user_list[:20])
+    await message.reply(text, parse_mode="md")
 
 @app.on_message(filters.command("broadcast") & filters.private)
 async def admin_broadcast(_, message):
@@ -283,23 +285,23 @@ async def admin_broadcast(_, message):
     users = get_all_users()
     msg_text = message.reply_to_message.text or message.reply_to_message.caption or ""
     
-    await message.reply(f"📢 Broadcasting to {len(users)} users...")
+    await message.reply(f"📢 <b>Broadcasting</b> to <code>{len(users)}</code> users...")
     success, failed = 0, 0
     
     for uid in users:
         try:
             await app.send_message(uid, msg_text)
             success += 1
-            time.sleep(0.05)  # Rate limit
+            time.sleep(0.05)
         except:
             failed += 1
     
     await message.reply(
-        f"✅ **BROADCAST COMPLETE**\n"
-        f"📤 Success: `{success}`\n"
-        f"❌ Failed: `{failed}`\n"
-        f"📊 Reach: `{success/len(users)*100:.1f}%`",
-        parse_mode="markdown"
+        f"✅ <b>BROADCAST COMPLETE</b>\n"
+        f"📤 <b>Success</b>: <code>{success}</code>\n"
+        f"❌ <b>Failed</b>: <code>{failed}</code>\n"
+        f"📊 <b>Reach</b>: <code>{success/len(users)*100:.1f}%</code>",
+        parse_mode="md"
     )
 
 @app.on_message(filters.command("clean") & filters.private)
@@ -310,15 +312,15 @@ async def admin_clean(_, message):
     cleaned_dl = len(os.listdir(DL)) if os.path.exists(DL) else 0
     cleaned_ext = len(os.listdir(EXT)) if os.path.exists(EXT) else 0
     
-    os.system(f"rm -rf {DL}/* {EXT}/*")
+    os.system(f"rm -rf {DL}/* {EXT}/* 2>/dev/null")
     os.makedirs(DL, exist_ok=True)
     os.makedirs(EXT, exist_ok=True)
     
     await message.reply(
-        f"🧹 **Cleaned!**\n"
-        f"📁 Downloads: `{cleaned_dl}` files\n"
-        f"📦 Extracted: `{cleaned_ext}` folders",
-        parse_mode="markdown"
+        f"🧹 <b>Cleaned!</b>\n"
+        f"📁 <b>Downloads</b>: <code>{cleaned_dl}</code> files\n"
+        f"📦 <b>Extracted</b>: <code>{cleaned_ext}</code> folders",
+        parse_mode="md"
     )
 
 @app.on_message(filters.command("addadmin") & filters.private)
@@ -327,273 +329,27 @@ async def add_admin(_, message):
         return
     
     try:
-        new_id = int(message.command[1])
+        new_id = int(message.text.split()[1])
         if new_id not in ADMIN_IDS:
             ADMIN_IDS.append(new_id)
-            await message.reply(f"✅ Admin `{new_id}` added!")
+            await message.reply(f"✅ Admin <code>{new_id}</code> added!")
         else:
             await message.reply("❌ Already admin!")
     except:
-        await message.reply("❌ Usage: `/addadmin 123456789`")
+        await message.reply("❌ <b>Usage:</b> <code>/addadmin 123456789</code>", parse_mode="md")
 
 @app.on_message(filters.command("admins") & filters.private)
 async def list_admins(_, message):
     if not is_admin(message.from_user.id):
         return
     
-    admin_list = "\n".join([f"`{aid}`" for aid in ADMIN_IDS])
-    await message.reply(f"👑 **ADMINS**\n\n{admin_list}", parse_mode="markdown")
+    admin_list = "\n".join([f"<code>{aid}</code>" for aid in ADMIN_IDS])
+    await message.reply(f"👑 <b>ADMINS</b>\n\n{admin_list}", parse_mode="md")
 
 # ==============================
 # RUN
 # ==============================
 if __name__ == "__main__":
-    print("🚀 GitHub Push Bot + Admin Panel Started!")
-    app.run()# ==============================
-@app.on_message(filters.command("makeconfig"))
-async def makeconfig(_, message):
-    try:
-        args = message.text.split(None, 1)[1]
-        token, branch, repo, vis = [x.strip() for x in args.split("|")]
-        
-        vis = vis.lower()
-        if vis not in ["private", "public"]:
-            return await message.reply("❌ Use `private` or `public` for visibility")
-        
-        # Test token and create repo
-        repo_name = repo.split("/")[-1]
-        if create_repo(token, repo_name, vis):
-            save_user(message.from_user.id, {
-                "token": token,
-                "branch": branch,
-                "repo": repo,
-                "visibility": vis
-            })
-            await message.reply("✅ Config saved & repo created successfully!")
-        else:
-            await message.reply("❌ Failed to create repo. Check your GitHub token.")
-            
-    except Exception as e:
-        await message.reply(
-            "```Usage:\n/makeconfig TOKEN | BRANCH | USER/REPO | private/public```\n\n"
-            "Example:\n`/makeconfig ghp_xxx | main | username/myrepo | private`",
-            parse_mode="markdown"
-        )
-
-# ==============================
-# /CONFIG
-# ==============================
-@app.on_message(filters.command("config"))
-async def show_config(_, message):
-    cfg = get_user(message.from_user.id)
-    
-    if not cfg:
-        return await message.reply("❌ No config found. Use /makeconfig first.")
-    
-    config_text = f"""⚙️ **Your Config**
-
-📂 **Repo**: `{cfg['repo']}`
-🌿 **Branch**: `{cfg['branch']}`
-🔒 **Visibility**: `{cfg['visibility'].title()}`
-"""
-    await message.reply(config_text, parse_mode="markdown")
-
-# ==============================
-# /PUSH ZIP
-# ==============================
-@app.on_message(filters.command("push"))
-async def push_zip(client, message):
-    if not message.reply_to_message:
-        return await message.reply("❌ Reply to a ZIP file!")
-    
-    doc = message.reply_to_message.document
-    if not doc or not doc.file_name.lower().endswith(".zip"):
-        return await message.reply("❌ Please reply to a **ZIP file** only!")
-    
-    cfg = get_user(message.from_user.id)
-    if not cfg:
-        return await message.reply("❌ Setup config first: `/makeconfig`")
-    
-    status_msg = await message.reply("📥 **Downloading ZIP file...**")
-    
-    try:
-        # Download ZIP
-        zip_path = await message.reply_to_message.download(
-            file_name=f"{DL}/{doc.file_name}"
-        )
-        await status_msg.edit("📦 **Extracting ZIP file...**")
-        
-        # Extract ZIP
-        extract_dir = f"{EXT}/{doc.file_name[:-4]}"
-        os.makedirs(extract_dir, exist_ok=True)
-        
-        with zipfile.ZipFile(zip_path) as z:
-            z.extractall(extract_dir)
-        
-        # Get all files
-        files = []
-        total_size = 0
-        
-        for root, _, filenames in os.walk(extract_dir):
-            for filename in filenames:
-                file_path = os.path.join(root, filename)
-                files.append(file_path)
-                total_size += os.path.getsize(file_path)
-        
-        if not files:
-            await status_msg.edit("❌ No files found in ZIP!")
-            return
-        
-        # Upload files
-        uploaded = 0
-        start_time = time.time()
-        success_count = 0
-        
-        await status_msg.edit(
-            f"🚀 **Upload Started**\n"
-            f"📁 Files: {len(files)}\n"
-            f"💾 Size: {total_size/1024/1024:.1f} MB"
-        )
-        
-        for i, file_path in enumerate(files, 1):
-            repo_path = os.path.relpath(file_path, extract_dir)
-            
-            if upload_file(
-                cfg["token"], 
-                cfg["repo"], 
-                cfg["branch"], 
-                file_path, 
-                repo_path
-            ):
-                success_count += 1
-            
-            file_size = os.path.getsize(file_path)
-            uploaded += file_size
-            
-            elapsed = time.time() - start_time
-            speed = uploaded / elapsed / 1024 / 1024 if elapsed > 0 else 0
-            remaining = total_size - uploaded
-            eta = remaining / speed if speed > 0 else 0
-            
-            percent = min(100, int(uploaded / total_size * 100))
-            
-            await status_msg.edit(
-                f"🚀 **Uploading to GitHub**\n\n"
-                f"`[{progress_bar(percent)}] {percent}%`\n\n"
-                f"⚡ **Speed**: {speed:.2f} MB/s\n"
-                f"📄 **Files**: {i}/{len(files)} ✅{success_count}\n"
-                f"⏳ **ETA**: {int(eta)}s"
-            )
-        
-        # Cleanup
-        os.system(f"rm -rf '{zip_path}' '{extract_dir}'")
-        
-        repo_url = f"https://github.com/{cfg['repo']}/tree/{cfg['branch']}"
-        await status_msg.edit(
-            f"✅ **Upload Completed!**\n\n"
-            f"📊 **Stats**:\n"
-            f"• Files: {len(files)}\n"
-            f"• Success: {success_count}\n"
-            f"• Failed: {len(files) - success_count}\n\n"
-            f"🔗 **[View Repo]({repo_url})**",
-            disable_web_page_preview=False
-        )
-        
-    except Exception as e:
-        await status_msg.edit("❌ **Upload failed!** Check logs or try again.")
-        print(f"Error: {e}")
-
-# ==============================
-# /STATS
-# ==============================
-@app.on_message(filters.command("stats"))
-async def stats(_, message):
-    users = get_all_users()
-    active_users = sum(1 for uid in users if get_user(uid).get('token'))
-    
-    stats_text = f"""📊 **Bot Stats**
-
-👥 **Total Users**: `{len(users)}`
-✅ **Active Users**: `{active_users}`
-💾 **Database**: `{os.path.getsize(DB)} bytes`
-"""
-    await message.reply(stats_text, parse_mode="markdown")
-
-# ==============================
-# /USERS
-# ==============================
-@app.on_message(filters.command("users"))
-async def list_users(_, message):
-    users = get_all_users()
-    if not users:
-        return await message.reply("❌ No users found.")
-    
-    user_list = []
-    for uid in users[:20]:  # Limit to 20 users
-        user_data = get_user(uid)
-        username = user_data.get('username', 'N/A')
-        status = "✅ Active" if user_data.get('token') else "❌ Inactive"
-        user_list.append(f"`{uid}` - {username} - {status}")
-    
-    users_text = "**Active Users:**\n" + "\n".join(user_list)
-    await message.reply(users_text, parse_mode="markdown")
-
-# ==============================
-# /BROADCAST
-# ==============================
-@app.on_message(filters.command("broadcast"))
-async def broadcast(_, message):
-    if not message.reply_to_message:
-        return await message.reply("❌ Reply to message to broadcast!")
-    
-    users = get_all_users()
-    broadcast_msg = message.reply_to_message.text or message.reply_to_message.caption or " "
-    
-    success = 0
-    failed = 0
-    
-    await message.reply(f"📢 Broadcasting to {len(users)} users...")
-    
-    for uid in users:
-        try:
-            await app.send_message(uid, broadcast_msg)
-            success += 1
-        except:
-            failed += 1
-    
-    await message.reply(
-        f"✅ **Broadcast Complete**\n"
-        f"• Success: `{success}`\n"
-        f"• Failed: `{failed}`",
-        parse_mode="markdown"
-    )
-
-# ==============================
-# START
-# ==============================
-@app.on_message(filters.command("start"))
-async def start(_, message):
-    welcome_text = """
-🤖 **GitHub Push Bot**
-
-**Commands:**
-• `/makeconfig` - Setup repo config
-• `/config` - View your config  
-• `/push` - Upload ZIP (reply to ZIP)
-• `/stats` - Bot statistics
-• `/users` - List users (admin)
-• `/broadcast` - Broadcast msg (admin)
-
-**Usage:**
-1. `/makeconfig TOKEN|BRANCH|REPO|private`
-2. Send ZIP file
-3. Reply `/push`
-"""
-    await message.reply(welcome_text, parse_mode="markdown")
-
-# ==============================
-# RUN BOT
-# ==============================
-if __name__ == "__main__":
-    print("🚀 Starting GitHub Push Bot...")
+    print("🚀 Github Push Bot + Admin Panel Started!")
+    print("✅ Parse mode fixed: 'md' instead of 'markdown'")
     app.run()
