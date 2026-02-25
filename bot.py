@@ -12,7 +12,7 @@ from pyrogram import Client, filters
 # ==============================
 API_ID = 12345  # Your API_ID
 API_HASH = "YOUR_API_HASH"  # Your API_HASH
-BOT_TOKEN = "YOUR_BOT_TOKEN"  # Your Bot Token
+BOT_TOKEN = "8757979136:AAGJ7vwPPwf_BypyYk1i9LMNPfOJ2nMP5Ac"  # Your Bot Token
 
 # 👑 ADMIN IDS (Add your Telegram ID here)
 ADMIN_IDS = [123456789]  # Replace with your Telegram user ID
