@@ -138,68 +138,117 @@ Visibility: {cfg['visibility'].title()}
 
 @app.on_message(filters.command("push"))
 async def push_zip(client, message):
+
     if not message.reply_to_message:
-        return await message.reply("Reply to ZIP file!")
-    
+        return await message.reply("❌ Reply to ZIP file!")
+
     doc = message.reply_to_message.document
-    if not doc or not ".zip" in doc.file_name.lower():
-        return await message.reply("ZIP file only!")
-    
+    if not doc or not doc.file_name.lower().endswith(".zip"):
+        return await message.reply("❌ ZIP file only!")
+
     cfg = get_user(message.from_user.id)
     if not cfg:
-        return await message.reply("Setup /makeconfig first!")
-    
-    status_msg = await message.reply("Downloading ZIP...")
-    
+        return await message.reply("⚠️ Setup first using /makeconfig")
+
+    status = await message.reply("📥 Downloading ZIP...")
+
     try:
-        zip_path = await message.reply_to_message.download(file_name=f"{DL}/{doc.file_name}")
-        await status_msg.edit("Extracting...")
-        
+        # ======================
+        # DOWNLOAD
+        # ======================
+        zip_path = await message.reply_to_message.download(
+            file_name=f"{DL}/{doc.file_name}"
+        )
+
+        await status.edit("📦 Extracting ZIP...")
+
         extract_dir = f"{EXT}/{doc.file_name[:-4]}"
         os.makedirs(extract_dir, exist_ok=True)
-        with zipfile.ZipFile(zip_path) as z:
+
+        with zipfile.ZipFile(zip_path, "r") as z:
             z.extractall(extract_dir)
-        
+
+        # ======================
+        # REMOVE ROOT FOLDER
+        # ======================
+        items = os.listdir(extract_dir)
+
+        if len(items) == 1:
+            first = os.path.join(extract_dir, items[0])
+            if os.path.isdir(first):
+                extract_dir = first
+
+        # ======================
+        # COLLECT FILES
+        # ======================
         files = []
         total_size = 0
-        for root, _, fs in os.walk(extract_dir):
-            for f in fs:
-                path = os.path.join(root, f)
+
+        for root, _, filenames in os.walk(extract_dir):
+            for name in filenames:
+                path = os.path.join(root, name)
                 files.append(path)
                 total_size += os.path.getsize(path)
-        
+
         if not files:
-            await status_msg.edit("No files in ZIP!")
-            return
-        
+            return await status.edit("❌ ZIP empty!")
+
+        await status.edit(f"🚀 Uploading {len(files)} files...")
+
         uploaded = 0
-        start_time = time.time()
-        success_count = 0
-        
-        await status_msg.edit(f"Upload started... {len(files)} files")
-        
+        success = 0
+        start = time.time()
+
+        # ======================
+        # UPLOAD LOOP
+        # ======================
         for i, file_path in enumerate(files, 1):
-            repo_path = os.path.relpath(file_path, extract_dir)
-            if upload_file(cfg["token"], cfg["repo"], cfg["branch"], file_path, repo_path):
-                success_count += 1
-            
-            uploaded += os.path.getsize(file_path)
-            elapsed = time.time() - start_time
-            speed = uploaded / elapsed / 1024 / 1024 if elapsed else 0
-            percent = min(100, int(uploaded / total_size * 100))
-            
-            await status_msg.edit(
-                f"[{progress_bar(percent)}] {percent}%\n"
-                f"Speed: {speed:.1f}MB/s | {i}/{len(files)} ✅{success_count}"
+
+            repo_path = os.path.relpath(
+                file_path,
+                extract_dir
+            ).replace("\\", "/")
+
+            ok = upload_file(
+                cfg["token"],
+                cfg["repo"],
+                cfg["branch"],
+                file_path,
+                repo_path
             )
-        
+
+            if ok:
+                success += 1
+
+            uploaded += os.path.getsize(file_path)
+
+            percent = int((uploaded / total_size) * 100)
+            elapsed = time.time() - start
+            speed = uploaded / elapsed / 1024 / 1024 if elapsed else 0
+
+            await status.edit(
+                f"📤 Uploading...\n"
+                f"[{progress_bar(percent)}] {percent}%\n"
+                f"⚡ {speed:.2f} MB/s\n"
+                f"📁 {i}/{len(files)} ✅{success}"
+            )
+
+        # ======================
+        # CLEANUP
+        # ======================
+        os.system(f"rm -rf '{zip_path}' '{EXT}/{doc.file_name[:-4]}'")
+
         repo_url = f"https://github.com/{cfg['repo']}"
-        os.system(f"rm -rf '{zip_path}' '{extract_dir}'")
-        await status_msg.edit(f"✅ Done! {success_count}/{len(files)}\nRepo: {repo_url}")
-        
+
+        await status.edit(
+            f"✅ Upload Complete!\n\n"
+            f"📦 Files: {success}/{len(files)}\n"
+            f"🔗 Repo:\n{repo_url}"
+        )
+
     except Exception as e:
-        await status_msg.edit("Upload failed!")
-        print(f"Error: {e}")
+        print(e)
+        await status.edit("❌ Upload Failed!")
 
 # ==============================
 # ADMIN COMMANDS
