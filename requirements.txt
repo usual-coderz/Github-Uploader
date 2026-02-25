@@ -1,0 +1,12 @@
+# Core Dependencies
+pyrogram==2.0.106
+TgCrypto==1.2.5
+
+# HTTP & JSON
+requests==2.31.0
+
+# System & Utilities
+aiofiles==23.2.1
+
+# Optional: For better performance
+aiohttp==3.9.1
