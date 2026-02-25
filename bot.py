@@ -10,12 +10,12 @@ from pyrogram import Client, filters
 # ==============================
 # CONFIG
 # ==============================
-API_ID = 12345  # Your API_ID
-API_HASH = "YOUR_API_HASH"  # Your API_HASH
+API_ID = 22657083  # Your API_ID
+API_HASH = "d6186691704bd901bdab275ceaab88f3"  # Your API_HASH
 BOT_TOKEN = "8757979136:AAGJ7vwPPwf_BypyYk1i9LMNPfOJ2nMP5Ac"  # Your Bot Token
 
 # 👑 ADMIN IDS (Add your Telegram ID here)
-ADMIN_IDS = [123456789]  # Replace with your Telegram user ID
+ADMIN_IDS = [2083251445]  # Replace with your Telegram user ID
 
 DB = "users.json"
 DL = "downloads"
